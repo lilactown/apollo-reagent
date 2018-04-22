@@ -2,6 +2,7 @@
   (:require [reagent.core]
             [apollo-reagent.core :as ar]
             [apollo-reagent.server :as ars]
+            [promesa.core :as p]
             ["apollo-boost" :as apollo-boost]))
 
 ;; shadow-cljs' ES modules don't work for this for some reason
@@ -33,12 +34,16 @@
 
 (defn page []
   [:div [poke-name 5]
-   [poke-name-weight 4]])
+   [poke-name-weight 4]
+   [:div [:div [poke-name-weight 120]
+          [poke-name 155]]]])
 
 (defn start []
-  (reagent.core/render-component [page]
-                                 (. js/document (getElementById "app")))
-  (ars/preload nil page nil))
+  ;; (reagent.core/render-component [page]
+  ;;                                (. js/document (getElementById "app")))
+  (p/then (ars/preload nil page nil)
+          #(println ">>>> done <<<<"))
+  )
 
 (defn ^:export init []
   ;; init is called ONCE when the page loads
