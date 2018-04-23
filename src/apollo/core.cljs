@@ -32,8 +32,9 @@
          [:div "And weight is " weight]]))))
 
 
-(defn more-complicated [& ns]
-  [:div (map poke-name ns)])
+(defn more-complicated [& nxs]
+  [:div (for [n nxs]
+          ^{:key n} [poke-name n])])
 
 
 (defn page []
@@ -41,13 +42,16 @@
    [poke-name-weight 4]
    [:div [:div [poke-name-weight 120]
           [poke-name 155]]]
-   [more-complicated 10 11 12]])
+   [more-complicated 10 5 12]])
 
 (defn start []
-  ;; (reagent.core/render-component [page]
-  ;;                                (. js/document (getElementById "app")))
-  (p/then (ars/preload nil [page])
-          #(println ">>>> done <<<<"))
+  (reagent.core/render-component [page]
+                                 (. js/document (getElementById "app")))
+  (with-redefs [apollo.core/client
+                (ar/create-client apollo-boost/default
+                                  {:uri "http://localhost:3000"})]
+    (p/then (ars/preload [:div [page]])
+          #(println ">>>> done <<<<")))
   )
 
 (defn ^:export init []
