@@ -32,16 +32,21 @@
          [:div "And weight is " weight]]))))
 
 
+(defn more-complicated [& ns]
+  [:div (map poke-name ns)])
+
+
 (defn page []
   [:div [poke-name 5]
    [poke-name-weight 4]
    [:div [:div [poke-name-weight 120]
-          [poke-name 155]]]])
+          [poke-name 155]]]
+   [more-complicated 10 11 12]])
 
 (defn start []
   ;; (reagent.core/render-component [page]
   ;;                                (. js/document (getElementById "app")))
-  (p/then (ars/preload nil page nil)
+  (p/then (ars/preload nil [page])
           #(println ">>>> done <<<<"))
   )
 

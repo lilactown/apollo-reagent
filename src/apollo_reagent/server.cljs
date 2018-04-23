@@ -34,49 +34,35 @@
     query)
   )
 
-(defn visit [component props]
-  (if-not (fn? component)
-    (visit-children props)
-    (let [query-ln (count @queries)
-          instance (apply component props)]
-      (if (> (count @queries) query-ln)
-        (do (println "A query was added")
-            (-> (p/all @queries)
-                (p/then #(do ;; (println "promise-> " %)
-                           (reset! queries [])
-                           (if (fn? instance)
-                             ;; form-2 component
-                             (visit-children (instance props))
-                             (visit-children instance)
-                             ))))
-            )
-        ;; no query was added
-         (if (fn? instance)
-           ;; form-2 component
-           (visit-children (instance props))
-           (visit-children instance))))
-      )
-  )
+(defn visit [node]
+  (println "node:" node)
+  (cond (and (vector? node) (fn? (first node)))
+        (let [[component & props] node
+              query-ln (count @queries)
+              body (apply component props)]
+          (if (> (count @queries) query-ln)
+            (do (println "A query was added")
+                (-> (p/all @queries)
+                    (p/then #(do (println "promise-> " %)
+                               (reset! queries [])
+                               (visit-children body)))))
+                )
+            (visit-children body))
+        :default node
+        ))
 
-(defn visit-children [instance]
-  ;; (println instance)
-  (let [v (clojure.walk/prewalk
-           (fn [form]
-             ;; (println form)
-             (if (and (vector? form)
-                      (fn? (first form)))
-               (visit (first form) (rest form))
-               (do ;; (println form)
-                   form)))
-           instance)]
-  (js/console.log v)
-  (p/all v)))
+(defn visit-children [body]
+  (clojure.walk/prewalk
+   visit
+   body)
+  (p/all @queries))
 
-(defn preload [client component props]
-    (with-redefs [apollo-reagent.core/watch-query! track-query!
-                  apollo-reagent.server/queries (atom [])
-                  ]
-      (let [vp (visit component props)]
-      (println @queries)
+(defn preload [client component]
+  (with-redefs [apollo-reagent.core/watch-query! track-query!
+                apollo-reagent.server/queries (atom [])
+                ]
+    (let [vp (visit component)]
+      (println "preloaded:" vp)
+      (println "preloaded queries:" @queries)
       vp)
-      ))
+    ))
