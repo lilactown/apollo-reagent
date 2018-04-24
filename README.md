@@ -18,13 +18,12 @@
                  client
                  "query NameWeight($number: Int!) { pokemon(number: $number) { name  } }"
                  {:variables {:number number}})]
-    (fn [number]
       (if (:loading @pokemon)
         [:div "Loading"]
 
         ;; we have data
         (let [{:keys [name weight]} (get-in @pokemon [:data :pokemon])]
-          [:div "Pokemon " number "'s name is " name])))))
+          [:div "Pokemon " number "'s name is " name]))))
 
 (defn app []
   [:div [poke-name 200]
